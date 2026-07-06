@@ -1,254 +1,66 @@
-# LinkedIn Profile Scraper
+# LinkedIn Scraper
 
-A comprehensive Python-based web scraper for LinkedIn profiles. Extract work experience, certifications, skills, and more from any LinkedIn profile.
+A collection of Python/Selenium scripts for scraping LinkedIn profile data (experience, education, skills, certifications, etc.) into structured JSON.
 
-## Features
+## What it does
 
-- 👤 Extract name, headline, and location
-- 💼 Get current company and full work experience history
-- 📜 Extract certifications and licenses
-- 💡 Get skills list
-- 📄 Extract about/summary section
-- 🔐 Multiple login options (manual/Google OAuth, email/password)
-- 🚀 Batch scrape multiple profiles efficiently
-- 💾 Save data to JSON files
+This repo holds several iterations of a LinkedIn profile scraper built with Selenium and BeautifulSoup:
 
-## Installation
+- **`linkedin_scraper.py`** — first version. `LinkedInProfileScraper` class with manual (Google OAuth / email-password) login and an interactive `if __name__ == "__main__"` entry point.
+- **`linkedin_scrapper_v2.py`** — a larger rewrite adding a `ScraperConfig` / `LinkedInProfile` dataclass setup, retry logic, logging, multi-format export (JSON/CSV/Excel) scaffolding, and a `main()` entry point.
+- **`linked_scrapper_v3.py`** — a further rewrite that separates concerns into `LinkedInProfileExtractor` (parses saved HTML into a structured profile dict covering basic info, experience, education, skills, certifications, projects, honors/awards, and volunteering) and `LinkedInScraper` (Selenium driver: login, session persistence via a pickled cookie file, scrolling to load dynamic content). Run directly, it prompts for a profile URL, scrapes it, and writes a `profile_data_<timestamp>.json` file.
+- **`html_diagnosis.py`** — a standalone diagnostic script that loads a previously saved LinkedIn HTML file and prints a report (page type, headings, sections found) to help debug why extraction might be failing.
+- **`profile_Omkaar_Chakraborty.json`** — a sample scraped-output file checked into the repo, showing the shape of the extracted data.
 
-1. Clone or download this repository
+There is no single "correct" entry point — the three scraper files are independent, overlapping implementations rather than one script that supersedes the others.
 
-2. Install required dependencies:
+## Tech stack
+
+- Python 3
+- Selenium (`selenium==4.15.2`) + `webdriver-manager` (auto-downloads ChromeDriver) for browser automation
+- BeautifulSoup4 + lxml for HTML parsing
+- pandas / openpyxl for potential CSV/Excel export (used in v2)
+- python-dotenv, colorama, tqdm, requests (declared dependencies, not all exercised by every script)
+
+## Setup
+
 ```bash
 pip install -r requirements.txt
 ```
 
-The scraper will automatically download the appropriate ChromeDriver for your system.
+Requires Google Chrome installed locally; `webdriver-manager` fetches a matching ChromeDriver automatically. A `.env.example` file exists but is currently empty, so there is no documented set of environment variables to configure.
 
-## Quick Start
+## Usage example
 
-### Basic Usage
+Run the v3 scraper interactively (prompts for a profile URL, opens a browser for manual login, scrapes, and saves JSON):
 
-```python
-from linkedin_scraper import scrape_linkedin_profile
-
-profile_url = "https://www.linkedin.com/in/username/"
-data = scrape_linkedin_profile(profile_url, manual_login=True)
-
-print(f"Name: {data['name']}")
-print(f"Current Company: {data['current_company']}")
-print(f"Experience: {len(data['experience'])} positions")
-print(f"Skills: {data['skills']}")
-```
-
-### With Email/Password Login
-
-```python
-from linkedin_scraper import scrape_linkedin_profile
-
-profile_url = "https://www.linkedin.com/in/username/"
-data = scrape_linkedin_profile(
-    profile_url,
-    email="your-email@example.com",
-    password="your-password"
-)
-
-print(data)
-```
-
-### Interactive Mode
-
-Run the scraper directly:
 ```bash
-python linkedin_scraper.py
+python linked_scrapper_v3.py
 ```
 
-You'll be prompted to:
-1. Enter a LinkedIn profile URL
-2. Select login method (no login, manual login with Google OAuth, or email/password)
-
-## Data Structure
-
-The scraper returns a dictionary with the following structure:
-
-```json
-{
-  "url": "https://www.linkedin.com/in/username/",
-  "name": "John Doe",
-  "headline": "Software Engineer at Tech Company",
-  "location": "San Francisco, CA",
-  "about": "Passionate software engineer with 10+ years...",
-  "current_company": "Tech Company",
-  "experience": [
-    {
-      "title": "Senior Software Engineer",
-      "company": "Tech Company",
-      "duration": "Jan 2020 - Present · 4 yrs",
-      "location": "San Francisco, CA",
-      "description": "Leading development of..."
-    }
-  ],
-  "certifications": [
-    {
-      "name": "AWS Certified Solutions Architect",
-      "issuer": "Amazon Web Services",
-      "date": "Issued Jan 2023"
-    }
-  ],
-  "skills": ["Python", "JavaScript", "AWS", "Docker"],
-  "languages": []
-}
-```
-
-## Advanced Usage
-
-### Scrape Multiple Profiles
+To extract data from an HTML file you already saved (e.g. via `save_html=True`), use it as a library:
 
 ```python
-from linkedin_scraper import LinkedInProfileScraper
+from linked_scrapper_v3 import extract_from_html_file
 
-profile_urls = [
-    "https://www.linkedin.com/in/person1/",
-    "https://www.linkedin.com/in/person2/",
-    "https://www.linkedin.com/in/person3/"
-]
-
-# Use context manager to reuse browser session
-with LinkedInProfileScraper(manual_login=True) as scraper:
-    for url in profile_urls:
-        data = scraper.scrape_profile(url)
-        print(f"{data['name']} - {data['current_company']}")
+data = extract_from_html_file("profile_1234567890.html")
+print(data["basic_profile"]["full_name"])
 ```
 
-### Headless Mode
+To debug a saved HTML file that isn't extracting cleanly:
 
-Run the browser in background (no visible window):
-
-```python
-data = scrape_linkedin_profile(
-    profile_url,
-    email="your-email@example.com",
-    password="your-password",
-    headless=True
-)
+```bash
+python html_diagnosis.py path/to/saved_profile.html
 ```
 
-### Save Profile Data to JSON File
+## Status
 
-```python
-import json
-from linkedin_scraper import scrape_linkedin_profile
+**Work in progress.** Observations from reading the code:
 
-profile_url = "https://www.linkedin.com/in/username/"
-data = scrape_linkedin_profile(profile_url, manual_login=True)
-
-if data:
-    filename = f"profile_{data['name'].replace(' ', '_')}.json"
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-    print(f"Saved to {filename}")
-```
-
-## Examples
-
-Check out **[profile_scraper_example.py](profile_scraper_example.py)** for detailed examples:
-
-1. Simple profile scrape
-2. Extract work experience
-3. Extract certifications
-4. Scrape multiple profiles
-5. Save profile to JSON
-6. Extract skills
-7. Compare two profiles
-
-## Important Notes
-
-### LinkedIn's Terms of Service
-- This scraper is for educational purposes only
-- Be respectful of LinkedIn's rate limits
-- Avoid scraping too frequently to prevent account restrictions
-- Review LinkedIn's Terms of Service before using
-
-### Login Credentials
-- Login provides access to more complete data
-- Your credentials are only used locally and never stored
-- Consider using environment variables for credentials:
-
-```python
-import os
-
-email = os.getenv('LINKEDIN_EMAIL')
-password = os.getenv('LINKEDIN_PASSWORD')
-```
-
-### Browser Requirements
-- Chrome browser should be installed on your system
-- ChromeDriver is automatically downloaded by webdriver-manager
-- Internet connection required
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue: "Could not extract [field]"**
-- Some fields may not be available depending on post privacy settings
-- Try logging in for full access
-
-**Issue: Login fails**
-- Verify your credentials are correct
-- LinkedIn may require 2FA - disable it temporarily or handle manually
-- Check for CAPTCHA challenges
-
-**Issue: Slow performance**
-- Increase wait times in the code if needed
-- Use headless mode for faster execution
-- LinkedIn pages can take time to fully load
-
-**Issue: Browser doesn't close**
-- Use context manager (`with` statement) to ensure proper cleanup
-- Manually call `scraper.close()` when done
-
-**Issue: Can't extract all profile data**
-- Login is required for full profile access
-- Use `manual_login=True` for best results
-- Some profiles may have privacy settings limiting data access
-- Scroll behavior may need adjustment for longer profiles
-
-## Requirements
-
-- Python 3.7+
-- Chrome browser
-- Internet connection
-- Dependencies listed in requirements.txt
-
-## Project Structure
-
-```
-linkedInScrapper/
-├── linkedin_scraper.py          # Main scraper module (posts & profiles)
-├── example.py                   # Post scraping examples
-├── profile_scraper_example.py   # Profile scraping examples
-├── requirements.txt             # Python dependencies
-└── README.md                    # This file
-```
-
-## Use Cases
-
-- 🔍 Recruit and analyze candidates
-- 📊 Research industry professionals
-- 🤝 Build contact databases
-- 📈 Analyze career paths and trends
-- 🎯 Verify credentials and experience
-- 💼 Competitive intelligence
-- 🎓 Academic research
-
-## Contributing
-
-Feel free to submit issues or pull requests for improvements!
-
-## License
-
-This project is provided as-is for educational purposes.
-
-## Disclaimer
-
-This tool is for educational and research purposes only. Web scraping may violate LinkedIn's Terms of Service. Use responsibly and at your own risk. The authors are not responsible for any misuse or consequences resulting from the use of this tool.
+- Three separate, overlapping scraper implementations (`linkedin_scraper.py`, `linkedin_scrapper_v2.py`, `linked_scrapper_v3.py`) exist side by side with no clear indication of which is current/canonical — they appear to be successive rewrites rather than a single maintained tool.
+- `linkedin_scrapper_v2.py` defines export/CSV/Excel and retry scaffolding (`ScraperConfig`, `LinkedInProfile` dataclasses) that isn't wired up in the other versions.
+- The v3 HTML extractor (`LinkedInProfileExtractor`) uses heuristic, order-based text parsing (e.g. "first text element is the title, second is the company") which is fragile against LinkedIn markup changes and is explicitly why `html_diagnosis.py` exists as a debugging aid.
+- `.env.example` is present but empty — no documented environment-variable configuration.
+- No automated tests.
+- No packaging (`setup.py`/`pyproject.toml`) or CLI entry point beyond running scripts directly.
+- LinkedIn scraping may violate LinkedIn's Terms of Service; use at your own risk and for educational/personal purposes only.
