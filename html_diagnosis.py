@@ -189,7 +189,7 @@ def analyze_linkedin_html(html_file_path: str):
     else:
         print("✓ HTML appears to contain profile data")
         print("  → The parser may need adjustment for this specific HTML structure")
-        print("  → Use the improved parser (linkedin_scraper_v2.py)")
+        print("  → Check LinkedInProfileExtractor's section detection in linked_scrapper_v3.py")
     
     print("\n" + "="*70)
     print("END OF DIAGNOSTIC REPORT")
