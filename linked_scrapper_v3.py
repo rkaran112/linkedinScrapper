@@ -122,7 +122,7 @@ class LinkedInProfileExtractor:
             text_lower = text.lower()
             for keyword in header_keywords:
                 if text_lower == keyword.lower() or text_lower.startswith(keyword.lower()):
-                    section = element.find_parent(['section', 'div'], recursive=True)
+                    section = element.find_parent(['section', 'div'])
                     if section:
                         return section
         
