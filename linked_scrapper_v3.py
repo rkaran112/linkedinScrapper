@@ -165,6 +165,8 @@ class LinkedInProfileExtractor:
                             break
         
         for element in self.soup.find_all(['span', 'div', 'p']):
+            if element.find(['span', 'div', 'p']):
+                continue  # skip containers so we don't match concatenated text from nested elements
             text = self._normalize_text(element.get_text())
             if text and any(indicator in text.lower() for indicator in ['area', 'location', ',']):
                 if re.search(r'^[\w\s,]+,[\w\s,]+$', text) and len(text) < 100:
