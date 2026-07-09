@@ -136,13 +136,26 @@ class LinkedInProfileExtractor:
         
         containers = section.find_all(['ul', 'ol', 'div'], recursive=True)
         for container in containers:
-            direct_children = [child for child in container.children 
+            direct_children = [child for child in container.children
                              if isinstance(child, Tag) and child.name == 'div']
             if len(direct_children) >= 2:
                 return direct_children
-        
+
         return []
-    
+
+    def _get_leaf_text_elements(self, item: Tag) -> List[str]:
+        """Collect normalized text from leaf elements only, skipping the
+        consecutive duplicates LinkedIn produces via paired aria-hidden /
+        visually-hidden accessibility spans around the same visible text."""
+        text_elements = []
+        for elem in item.find_all(['span', 'div', 'p', 'h3', 'h4']):
+            if elem.find(['span', 'div', 'p', 'h3', 'h4']):
+                continue  # skip containers so we don't match concatenated text from nested elements
+            text = self._normalize_text(elem.get_text())
+            if text and (not text_elements or text_elements[-1] != text):
+                text_elements.append(text)
+        return text_elements
+
     # ==================== BASIC PROFILE EXTRACTION ====================
     
     def _extract_basic_profile(self):
@@ -217,12 +230,8 @@ class LinkedInProfileExtractor:
             'description': []
         }
         
-        text_elements = []
-        for elem in item.find_all(['span', 'div', 'p', 'h3', 'h4']):
-            text = self._normalize_text(elem.get_text())
-            if text:
-                text_elements.append(text)
-        
+        text_elements = self._get_leaf_text_elements(item)
+
         if not text_elements:
             return experience
         
@@ -298,12 +307,9 @@ class LinkedInProfileExtractor:
             'activities': None
         }
         
-        text_elements = []
-        for elem in item.find_all(['span', 'div', 'p', 'h3', 'h4']):
-            text = self._normalize_text(elem.get_text())
-            if text and text.lower() != 'education':
-                text_elements.append(text)
-        
+        text_elements = [text for text in self._get_leaf_text_elements(item)
+                        if text.lower() != 'education']
+
         if not text_elements:
             return education
         
@@ -387,12 +393,8 @@ class LinkedInProfileExtractor:
             'expiration_date': None
         }
         
-        text_elements = []
-        for elem in item.find_all(['span', 'div', 'p', 'h3', 'h4']):
-            text = self._normalize_text(elem.get_text())
-            if text:
-                text_elements.append(text)
-        
+        text_elements = self._get_leaf_text_elements(item)
+
         if not text_elements:
             return cert
         
@@ -439,12 +441,8 @@ class LinkedInProfileExtractor:
             'associated_dates': None
         }
         
-        text_elements = []
-        for elem in item.find_all(['span', 'div', 'p', 'h3', 'h4']):
-            text = self._normalize_text(elem.get_text())
-            if text:
-                text_elements.append(text)
-        
+        text_elements = self._get_leaf_text_elements(item)
+
         if not text_elements:
             return project
         
@@ -488,12 +486,8 @@ class LinkedInProfileExtractor:
             'description': None
         }
         
-        text_elements = []
-        for elem in item.find_all(['span', 'div', 'p', 'h3', 'h4']):
-            text = self._normalize_text(elem.get_text())
-            if text:
-                text_elements.append(text)
-        
+        text_elements = self._get_leaf_text_elements(item)
+
         if not text_elements:
             return honor
         
@@ -542,12 +536,8 @@ class LinkedInProfileExtractor:
             'description': None
         }
         
-        text_elements = []
-        for elem in item.find_all(['span', 'div', 'p', 'h3', 'h4']):
-            text = self._normalize_text(elem.get_text())
-            if text:
-                text_elements.append(text)
-        
+        text_elements = self._get_leaf_text_elements(item)
+
         if not text_elements:
             return volunteer
         
