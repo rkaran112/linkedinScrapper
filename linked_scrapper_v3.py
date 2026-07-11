@@ -327,7 +327,7 @@ class LinkedInProfileExtractor:
                 break
         
         for text in text_elements[:]:
-            year_match = re.findall(r'\b(19|20)\d{2}\b', text)
+            year_match = re.findall(r'\b((?:19|20)\d{2})\b', text)
             if len(year_match) == 2:
                 education['start_year'] = year_match[0]
                 education['end_year'] = year_match[1]

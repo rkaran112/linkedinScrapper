@@ -112,6 +112,43 @@ class TestExtractExperience(unittest.TestCase):
         self.assertEqual(exp['company_name'], "Acme Corp")
 
 
+class TestExtractEducation(unittest.TestCase):
+
+    def _build_html(self, institution, degree, years):
+        return f"""
+        <html><body>
+        <h1>Jane Doe</h1>
+        <section>
+            <h2>Education</h2>
+            <ul>
+                <li>
+                    <span>{institution}</span>
+                    <span>{degree}</span>
+                    <span>{years}</span>
+                </li>
+            </ul>
+        </section>
+        </body></html>
+        """
+
+    def test_parses_full_start_and_end_year(self):
+        html = self._build_html("State University", "Bachelor of Science, Computer Science", "2018 - 2022")
+        data = LinkedInProfileExtractor(html).extract()
+
+        self.assertEqual(len(data['education']), 1)
+        edu = data['education'][0]
+        self.assertEqual(edu['start_year'], "2018")
+        self.assertEqual(edu['end_year'], "2022")
+
+    def test_parses_single_year(self):
+        html = self._build_html("State University", "Bachelor of Science, Computer Science", "2022")
+        data = LinkedInProfileExtractor(html).extract()
+
+        edu = data['education'][0]
+        self.assertIsNone(edu['start_year'])
+        self.assertEqual(edu['end_year'], "2022")
+
+
 class TestExtractBasicProfile(unittest.TestCase):
 
     def test_extracts_full_name_from_first_h1(self):
