@@ -149,6 +149,50 @@ class TestExtractEducation(unittest.TestCase):
         self.assertEqual(edu['end_year'], "2022")
 
 
+class TestExtractCertifications(unittest.TestCase):
+
+    def _build_html(self, name, org, dates):
+        return f"""
+        <html><body>
+        <h1>Jane Doe</h1>
+        <section>
+            <h2>Licenses & Certifications</h2>
+            <ul>
+                <li>
+                    <span>{name}</span>
+                    <span>{org}</span>
+                    <span>{dates}</span>
+                </li>
+            </ul>
+        </section>
+        </body></html>
+        """
+
+    def test_parses_name_organization_and_dates(self):
+        html = self._build_html(
+            "AWS Certified Solutions Architect", "Amazon Web Services",
+            "Issued Jan 2022 · Expires Jan 2025"
+        )
+        data = LinkedInProfileExtractor(html).extract()
+
+        self.assertEqual(len(data['certifications']), 1)
+        cert = data['certifications'][0]
+        self.assertEqual(cert['name'], "AWS Certified Solutions Architect")
+        self.assertEqual(cert['issuing_organization'], "Amazon Web Services")
+        self.assertEqual(cert['issue_date'], "Jan 2022")
+        self.assertEqual(cert['expiration_date'], "Jan 2025")
+
+    def test_missing_expiration_leaves_it_none(self):
+        html = self._build_html(
+            "Certified Kubernetes Administrator", "The Linux Foundation", "Issued Jun 2023"
+        )
+        data = LinkedInProfileExtractor(html).extract()
+
+        cert = data['certifications'][0]
+        self.assertEqual(cert['issue_date'], "Jun 2023")
+        self.assertIsNone(cert['expiration_date'])
+
+
 class TestExtractBasicProfile(unittest.TestCase):
 
     def test_extracts_full_name_from_first_h1(self):
