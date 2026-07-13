@@ -364,7 +364,7 @@ class LinkedInProfileExtractor:
         for elem in skills_section.find_all(['span', 'div', 'li', 'p']):
             text = self._normalize_text(elem.get_text())
             if text and 2 < len(text) < 50 and text.lower() not in ['skills', 'endorsements']:
-                if text not in skills and not any(text in s for s in skills):
+                if text not in skills:
                     skills.append(text)
         
         self.profile_data['skills'] = skills

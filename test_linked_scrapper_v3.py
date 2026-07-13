@@ -193,6 +193,33 @@ class TestExtractCertifications(unittest.TestCase):
         self.assertIsNone(cert['expiration_date'])
 
 
+class TestExtractSkills(unittest.TestCase):
+
+    def _build_html(self, skills):
+        items = "".join(f"<li><span>{skill}</span></li>" for skill in skills)
+        return f"""
+        <html><body>
+        <h1>Jane Doe</h1>
+        <section>
+            <h2>Skills</h2>
+            <ul>{items}</ul>
+        </section>
+        </body></html>
+        """
+
+    def test_keeps_skills_that_are_substrings_of_other_skills(self):
+        html = self._build_html(["JavaScript", "Java", "Python"])
+        data = LinkedInProfileExtractor(html).extract()
+
+        self.assertEqual(data['skills'], ["JavaScript", "Java", "Python"])
+
+    def test_dedupes_exact_duplicate_skills(self):
+        html = self._build_html(["Python", "Python"])
+        data = LinkedInProfileExtractor(html).extract()
+
+        self.assertEqual(data['skills'], ["Python"])
+
+
 class TestExtractBasicProfile(unittest.TestCase):
 
     def test_extracts_full_name_from_first_h1(self):
