@@ -220,6 +220,114 @@ class TestExtractSkills(unittest.TestCase):
         self.assertEqual(data['skills'], ["Python"])
 
 
+class TestExtractProjects(unittest.TestCase):
+
+    def _build_html(self, name, dates, description):
+        return f"""
+        <html><body>
+        <h1>Jane Doe</h1>
+        <section>
+            <h2>Projects</h2>
+            <ul>
+                <li>
+                    <span>{name}</span>
+                    <span>{dates}</span>
+                    <span>{description}</span>
+                </li>
+            </ul>
+        </section>
+        </body></html>
+        """
+
+    def test_parses_name_dates_and_description(self):
+        html = self._build_html(
+            "Personal Portfolio Website", "Jan 2021 - Mar 2021",
+            "Built a responsive portfolio site using React and deployed it to Vercel."
+        )
+        data = LinkedInProfileExtractor(html).extract()
+
+        self.assertEqual(len(data['projects']), 1)
+        project = data['projects'][0]
+        self.assertEqual(project['project_name'], "Personal Portfolio Website")
+        self.assertEqual(project['associated_dates'], "Jan 2021 - Mar 2021")
+        self.assertEqual(project['description'],
+                          "Built a responsive portfolio site using React and deployed it to Vercel.")
+
+
+class TestExtractHonorsAwards(unittest.TestCase):
+
+    def _build_html(self, title, issuer, date, description):
+        return f"""
+        <html><body>
+        <h1>Jane Doe</h1>
+        <section>
+            <h2>Honors & Awards</h2>
+            <ul>
+                <li>
+                    <span>{title}</span>
+                    <span>{issuer}</span>
+                    <span>{date}</span>
+                    <span>{description}</span>
+                </li>
+            </ul>
+        </section>
+        </body></html>
+        """
+
+    def test_parses_title_issuer_date_and_description(self):
+        html = self._build_html(
+            "Employee of the Year", "Acme Corp", "Issued Dec 2022",
+            "Awarded for outstanding contributions to the engineering team."
+        )
+        data = LinkedInProfileExtractor(html).extract()
+
+        self.assertEqual(len(data['honors_awards']), 1)
+        honor = data['honors_awards'][0]
+        self.assertEqual(honor['title'], "Employee of the Year")
+        self.assertEqual(honor['issuer'], "Acme Corp")
+        self.assertEqual(honor['date'], "Issued Dec 2022")
+        self.assertEqual(honor['description'],
+                          "Awarded for outstanding contributions to the engineering team.")
+
+
+class TestExtractVolunteering(unittest.TestCase):
+
+    def _build_html(self, role, organization, dates, cause, description):
+        return f"""
+        <html><body>
+        <h1>Jane Doe</h1>
+        <section>
+            <h2>Volunteering</h2>
+            <ul>
+                <li>
+                    <span>{role}</span>
+                    <span>{organization}</span>
+                    <span>{dates}</span>
+                    <span>{cause}</span>
+                    <span>{description}</span>
+                </li>
+            </ul>
+        </section>
+        </body></html>
+        """
+
+    def test_parses_role_organization_dates_cause_and_description(self):
+        html = self._build_html(
+            "Mentor", "Code for Good", "Jan 2019 - Present", "Education",
+            "Mentored students in web development fundamentals every weekend."
+        )
+        data = LinkedInProfileExtractor(html).extract()
+
+        self.assertEqual(len(data['volunteering']), 1)
+        volunteer = data['volunteering'][0]
+        self.assertEqual(volunteer['role'], "Mentor")
+        self.assertEqual(volunteer['organization'], "Code for Good")
+        self.assertEqual(volunteer['date_range'], "Jan 2019 - Present")
+        self.assertEqual(volunteer['cause'], "Education")
+        self.assertEqual(volunteer['description'],
+                          "Mentored students in web development fundamentals every weekend.")
+
+
 class TestExtractBasicProfile(unittest.TestCase):
 
     def test_extracts_full_name_from_first_h1(self):
