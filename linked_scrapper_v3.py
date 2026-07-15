@@ -182,7 +182,9 @@ class LinkedInProfileExtractor:
                 continue  # skip containers so we don't match concatenated text from nested elements
             text = self._normalize_text(element.get_text())
             if text and any(indicator in text.lower() for indicator in ['area', 'location', ',']):
-                if re.search(r'^[\w\s,]+,[\w\s,]+$', text) and len(text) < 100:
+                # Comma is optional: LinkedIn often shows metro areas like
+                # "San Francisco Bay Area" with no comma at all.
+                if re.search(r'^[\w\s,]+$', text) and len(text) < 100:
                     self.profile_data['basic_profile']['location'] = text
                     break
         

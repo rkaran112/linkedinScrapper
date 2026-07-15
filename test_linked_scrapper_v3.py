@@ -342,6 +342,33 @@ class TestExtractBasicProfile(unittest.TestCase):
         self.assertEqual(data['education'], [])
         self.assertEqual(data['skills'], [])
 
+    def test_parses_location_with_comma(self):
+        html = """
+        <html><body>
+        <div>
+            <h1>Jane Doe</h1>
+            <div>Senior Software Engineer at Acme Corp</div>
+            <span>New York, NY</span>
+        </div>
+        </body></html>
+        """
+        data = LinkedInProfileExtractor(html).extract()
+        self.assertEqual(data['basic_profile']['location'], "New York, NY")
+
+    def test_parses_metro_area_location_without_comma(self):
+        # LinkedIn commonly renders metro-area locations with no comma at all.
+        html = """
+        <html><body>
+        <div>
+            <h1>Jane Doe</h1>
+            <div>Senior Software Engineer at Acme Corp</div>
+            <span>San Francisco Bay Area</span>
+        </div>
+        </body></html>
+        """
+        data = LinkedInProfileExtractor(html).extract()
+        self.assertEqual(data['basic_profile']['location'], "San Francisco Bay Area")
+
 
 if __name__ == "__main__":
     unittest.main()
