@@ -49,6 +49,16 @@ class TestExtractDateRange(unittest.TestCase):
         self.assertIsNone(end)
         self.assertIsNone(duration)
 
+    def test_employment_type_prefix_does_not_swallow_duration(self):
+        # A leading "Full-time · ..." segment before the date range must not
+        # be mistaken for the duration that follows the date range.
+        start, end, duration = LinkedInProfileExtractor._extract_date_range(
+            "Full-time · Jan 2020 - Present · 5 yrs 6 mos"
+        )
+        self.assertEqual(start, "Jan 2020")
+        self.assertEqual(end, "Present")
+        self.assertEqual(duration, "5 yrs 6 mos")
+
 
 class TestExtractExperience(unittest.TestCase):
 

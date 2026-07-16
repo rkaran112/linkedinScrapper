@@ -105,8 +105,11 @@ class LinkedInProfileExtractor:
         if date_match:
             start_date = date_match.group(1).strip()
             end_date = date_match.group(2).strip()
-        
-        duration_match = re.search(duration_pattern, text)
+
+        # Search for duration only after the date range so a leading
+        # "Full-time · ..." segment isn't mistaken for the duration.
+        search_start = date_match.end() if date_match else 0
+        duration_match = re.search(duration_pattern, text[search_start:])
         if duration_match:
             duration = duration_match.group(1).strip()
         
