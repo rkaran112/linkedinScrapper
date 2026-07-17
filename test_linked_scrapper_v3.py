@@ -379,6 +379,22 @@ class TestExtractBasicProfile(unittest.TestCase):
         data = LinkedInProfileExtractor(html).extract()
         self.assertEqual(data['basic_profile']['location'], "San Francisco Bay Area")
 
+    def test_parses_location_with_punctuation_in_place_name(self):
+        # Many real place names include periods, hyphens, or apostrophes
+        # (e.g. "St. Louis", "Winston-Salem", "Coeur d'Alene) and must not
+        # be rejected by the location character filter.
+        html = """
+        <html><body>
+        <div>
+            <h1>Jane Doe</h1>
+            <div>Senior Software Engineer at Acme Corp</div>
+            <span>St. Louis, MO</span>
+        </div>
+        </body></html>
+        """
+        data = LinkedInProfileExtractor(html).extract()
+        self.assertEqual(data['basic_profile']['location'], "St. Louis, MO")
+
 
 if __name__ == "__main__":
     unittest.main()

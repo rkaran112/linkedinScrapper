@@ -186,8 +186,10 @@ class LinkedInProfileExtractor:
             text = self._normalize_text(element.get_text())
             if text and any(indicator in text.lower() for indicator in ['area', 'location', ',']):
                 # Comma is optional: LinkedIn often shows metro areas like
-                # "San Francisco Bay Area" with no comma at all.
-                if re.search(r'^[\w\s,]+$', text) and len(text) < 100:
+                # "San Francisco Bay Area" with no comma at all. Punctuation
+                # is allowed since many real place names include it, e.g.
+                # "St. Louis, MO", "Winston-Salem, NC", "Coeur d'Alene, ID".
+                if re.search(r"^[\w\s,.'-]+$", text) and len(text) < 100:
                     self.profile_data['basic_profile']['location'] = text
                     break
         
