@@ -243,7 +243,7 @@ class LinkedInProfileExtractor:
             return experience
         
         for i, text in enumerate(text_elements):
-            if len(text) > 3 and not any(x in text.lower() for x in ['experience', '·']):
+            if len(text) >= 2 and not any(x in text.lower() for x in ['experience', '·']):
                 experience['job_title'] = text
                 text_elements = text_elements[i+1:]
                 break

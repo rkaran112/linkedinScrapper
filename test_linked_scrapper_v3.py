@@ -96,6 +96,17 @@ class TestExtractExperience(unittest.TestCase):
 
         self.assertEqual(data['basic_profile']['current_company'], "Acme Corp")
 
+    def test_short_job_title_is_not_skipped(self):
+        # Titles like "CTO", "VP", "CFO" are 3 characters or fewer and must
+        # still be recognized as the job title rather than being skipped in
+        # favor of the company name.
+        html = self._build_html("CTO", "Acme Corp", "Jan 2020 - Present · 5 yrs")
+        data = LinkedInProfileExtractor(html).extract()
+
+        exp = data['experience'][0]
+        self.assertEqual(exp['job_title'], "CTO")
+        self.assertEqual(exp['company_name'], "Acme Corp")
+
     def test_duplicate_accessibility_spans_are_collapsed(self):
         # LinkedIn renders visible text plus an aria-hidden duplicate of the
         # same text; leaf-text collection must not treat these as two fields.
