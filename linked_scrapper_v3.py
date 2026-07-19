@@ -135,7 +135,12 @@ class LinkedInProfileExtractor:
         """Extract repeating content blocks from a section."""
         list_items = section.find_all('li', recursive=True)
         if list_items:
-            return list_items
+            # Drop <li> elements nested inside another <li> (e.g. description
+            # bullet points), since those aren't separate top-level entries
+            # and would otherwise be parsed as phantom entries of their own.
+            top_level_items = [li for li in list_items if not li.find_parent('li')]
+            if top_level_items:
+                return top_level_items
         
         containers = section.find_all(['ul', 'ol', 'div'], recursive=True)
         for container in containers:

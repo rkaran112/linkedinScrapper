@@ -107,6 +107,40 @@ class TestExtractExperience(unittest.TestCase):
         self.assertEqual(exp['job_title'], "CTO")
         self.assertEqual(exp['company_name'], "Acme Corp")
 
+    def test_nested_description_bullets_are_not_treated_as_separate_entries(self):
+        # LinkedIn wraps each description bullet in its own <li>, nested
+        # inside the entry's outer <li>. Those nested bullets must not be
+        # picked up as additional top-level experience entries.
+        html = """
+        <html><body>
+        <h1>Jane Doe</h1>
+        <section>
+            <h2>Experience</h2>
+            <ul>
+                <li>
+                    <span>Senior Engineer</span>
+                    <span>Acme Corp</span>
+                    <span>Jan 2020 - Present</span>
+                    <ul>
+                        <li><span>Led a team of 5 engineers on the payments platform.</span></li>
+                        <li><span>Reduced latency by 30 percent through caching.</span></li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+        </body></html>
+        """
+        data = LinkedInProfileExtractor(html).extract()
+
+        self.assertEqual(len(data['experience']), 1)
+        exp = data['experience'][0]
+        self.assertEqual(exp['job_title'], "Senior Engineer")
+        self.assertEqual(exp['company_name'], "Acme Corp")
+        self.assertEqual(exp['description'], [
+            "Led a team of 5 engineers on the payments platform.",
+            "Reduced latency by 30 percent through caching.",
+        ])
+
     def test_duplicate_accessibility_spans_are_collapsed(self):
         # LinkedIn renders visible text plus an aria-hidden duplicate of the
         # same text; leaf-text collection must not treat these as two fields.
