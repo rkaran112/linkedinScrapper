@@ -107,6 +107,18 @@ class TestExtractExperience(unittest.TestCase):
         self.assertEqual(exp['job_title'], "CTO")
         self.assertEqual(exp['company_name'], "Acme Corp")
 
+    def test_job_title_containing_word_experience_is_not_skipped(self):
+        # The job title filter used to reject any text containing the
+        # substring "experience" to avoid mistaking the section header for
+        # a title, but that also rejected real titles like "User Experience
+        # Designer" or "Customer Experience Manager".
+        html = self._build_html("User Experience Designer", "Acme Corp", "Jan 2020 - Present")
+        data = LinkedInProfileExtractor(html).extract()
+
+        exp = data['experience'][0]
+        self.assertEqual(exp['job_title'], "User Experience Designer")
+        self.assertEqual(exp['company_name'], "Acme Corp")
+
     def test_nested_description_bullets_are_not_treated_as_separate_entries(self):
         # LinkedIn wraps each description bullet in its own <li>, nested
         # inside the entry's outer <li>. Those nested bullets must not be
