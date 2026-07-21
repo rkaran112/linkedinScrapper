@@ -258,10 +258,16 @@ class LinkedInProfileExtractor:
             text_elements = text_elements[1:]
         
         for text in text_elements[:]:
-            if any(emp_type in text for emp_type in ['Full-time', 'Part-time', 'Contract', 
-                                                       'Freelance', 'Internship', 'Self-employed']):
-                experience['employment_type'] = text
-                text_elements.remove(text)
+            matched_type = next((emp_type for emp_type in ['Full-time', 'Part-time', 'Contract',
+                                                            'Freelance', 'Internship', 'Self-employed']
+                                  if emp_type in text), None)
+            if matched_type:
+                experience['employment_type'] = matched_type
+                # A combined text node like "Full-time · Jan 2020 - Present · 5 yrs"
+                # still carries the date range, so only drop it here if it has no
+                # date info of its own; otherwise leave it for the date loop below.
+                if not re.search(r'\d{4}|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Present', text, re.IGNORECASE):
+                    text_elements.remove(text)
                 break
         
         for text in text_elements[:]:

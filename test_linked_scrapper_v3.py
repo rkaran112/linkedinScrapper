@@ -153,6 +153,22 @@ class TestExtractExperience(unittest.TestCase):
             "Reduced latency by 30 percent through caching.",
         ])
 
+    def test_employment_type_combined_with_dates_does_not_drop_dates(self):
+        # When the employment type shares a text node with the date range
+        # (e.g. "Full-time · Jan 2020 - Present · 5 yrs 6 mos"), the
+        # employment-type match used to consume the whole node before the
+        # date loop ever saw it, leaving start/end date and duration unset.
+        html = self._build_html(
+            "Senior Engineer", "Acme Corp", "Full-time · Jan 2020 - Present · 5 yrs 6 mos"
+        )
+        data = LinkedInProfileExtractor(html).extract()
+
+        exp = data['experience'][0]
+        self.assertEqual(exp['employment_type'], "Full-time")
+        self.assertEqual(exp['start_date'], "Jan 2020")
+        self.assertEqual(exp['end_date'], "Present")
+        self.assertEqual(exp['duration'], "5 yrs 6 mos")
+
     def test_duplicate_accessibility_spans_are_collapsed(self):
         # LinkedIn renders visible text plus an aria-hidden duplicate of the
         # same text; leaf-text collection must not treat these as two fields.
