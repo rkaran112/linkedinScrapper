@@ -425,8 +425,10 @@ class LinkedInProfileExtractor:
         
         for text in text_elements:
             if re.search(r'issued|expires', text, re.IGNORECASE):
-                issued_match = re.search(r'issued\s+([A-Za-z]+\s+\d{4})', text, re.IGNORECASE)
-                expires_match = re.search(r'expires\s+([A-Za-z]+\s+\d{4})', text, re.IGNORECASE)
+                # Month is optional: LinkedIn shows year-only issue/expiration
+                # dates for some certifications (e.g. "Issued 2022").
+                issued_match = re.search(r'issued\s+([A-Za-z]+\s+\d{4}|\d{4})', text, re.IGNORECASE)
+                expires_match = re.search(r'expires\s+([A-Za-z]+\s+\d{4}|\d{4})', text, re.IGNORECASE)
                 
                 if issued_match:
                     cert['issue_date'] = issued_match.group(1)

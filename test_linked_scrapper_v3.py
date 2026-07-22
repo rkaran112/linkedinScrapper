@@ -275,6 +275,19 @@ class TestExtractCertifications(unittest.TestCase):
         self.assertEqual(cert['issue_date'], "Jun 2023")
         self.assertIsNone(cert['expiration_date'])
 
+    def test_parses_year_only_issue_and_expiration_dates(self):
+        # Some certifications render with no month, just "Issued 2020 ·
+        # Expires 2025"; the month must be optional so these aren't dropped.
+        html = self._build_html(
+            "PMP Certification", "Project Management Institute",
+            "Issued 2020 · Expires 2025"
+        )
+        data = LinkedInProfileExtractor(html).extract()
+
+        cert = data['certifications'][0]
+        self.assertEqual(cert['issue_date'], "2020")
+        self.assertEqual(cert['expiration_date'], "2025")
+
 
 class TestExtractSkills(unittest.TestCase):
 
