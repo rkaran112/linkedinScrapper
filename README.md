@@ -53,6 +53,14 @@ To debug a saved HTML file that isn't extracting cleanly:
 python html_diagnosis.py path/to/saved_profile.html
 ```
 
+## Running tests
+
+`test_linked_scrapper_v3.py` covers `LinkedInProfileExtractor` (text normalization, date parsing, and extraction of each profile section) against small synthetic HTML fixtures — no live LinkedIn HTML or network access required:
+
+```bash
+python -m unittest test_linked_scrapper_v3.py
+```
+
 ## Status
 
 **Work in progress.** Observations from reading the code:
@@ -61,6 +69,6 @@ python html_diagnosis.py path/to/saved_profile.html
 - `linkedin_scrapper_v2.py` defines export/CSV/Excel and retry scaffolding (`ScraperConfig`, `LinkedInProfile` dataclasses) that isn't wired up in the other versions.
 - The v3 HTML extractor (`LinkedInProfileExtractor`) uses heuristic, order-based text parsing (e.g. "first text element is the title, second is the company") which is fragile against LinkedIn markup changes and is explicitly why `html_diagnosis.py` exists as a debugging aid.
 - `.env.example` is present but empty — no documented environment-variable configuration.
-- No automated tests.
+- `test_linked_scrapper_v3.py` covers the v3 HTML extractor; the v1/v2 scrapers and the live Selenium scraping paths in v3 remain untested.
 - No packaging (`setup.py`/`pyproject.toml`) or CLI entry point beyond running scripts directly.
 - LinkedIn scraping may violate LinkedIn's Terms of Service; use at your own risk and for educational/personal purposes only.
