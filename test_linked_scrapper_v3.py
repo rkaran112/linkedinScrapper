@@ -231,6 +231,66 @@ class TestExtractEducation(unittest.TestCase):
         self.assertIsNone(edu['start_year'])
         self.assertEqual(edu['end_year'], "2022")
 
+    def test_parses_degree_and_field_of_study(self):
+        html = self._build_html("State University", "Bachelor of Science, Computer Science", "2018 - 2022")
+        data = LinkedInProfileExtractor(html).extract()
+
+        edu = data['education'][0]
+        self.assertEqual(edu['degree'], "Bachelor of Science")
+        self.assertEqual(edu['field_of_study'], "Computer Science")
+
+    def test_degree_without_comma_leaves_field_of_study_none(self):
+        html = self._build_html("State University", "Doctorate", "2018 - 2022")
+        data = LinkedInProfileExtractor(html).extract()
+
+        edu = data['education'][0]
+        self.assertEqual(edu['degree'], "Doctorate")
+        self.assertIsNone(edu['field_of_study'])
+
+    def test_parses_grade(self):
+        html = """
+        <html><body>
+        <h1>Jane Doe</h1>
+        <section>
+            <h2>Education</h2>
+            <ul>
+                <li>
+                    <span>State University</span>
+                    <span>Bachelor of Science, Computer Science</span>
+                    <span>2018 - 2022</span>
+                    <span>GPA: 3.8</span>
+                </li>
+            </ul>
+        </section>
+        </body></html>
+        """
+        data = LinkedInProfileExtractor(html).extract()
+
+        edu = data['education'][0]
+        self.assertEqual(edu['grade'], "GPA: 3.8")
+
+    def test_parses_activities(self):
+        html = """
+        <html><body>
+        <h1>Jane Doe</h1>
+        <section>
+            <h2>Education</h2>
+            <ul>
+                <li>
+                    <span>State University</span>
+                    <span>Bachelor of Science, Computer Science</span>
+                    <span>2018 - 2022</span>
+                    <span>Activities and societies: Robotics Club, Chess Club</span>
+                </li>
+            </ul>
+        </section>
+        </body></html>
+        """
+        data = LinkedInProfileExtractor(html).extract()
+
+        edu = data['education'][0]
+        self.assertEqual(edu['activities'], "Activities and societies: Robotics Club, Chess Club")
+
 
 class TestExtractCertifications(unittest.TestCase):
 
